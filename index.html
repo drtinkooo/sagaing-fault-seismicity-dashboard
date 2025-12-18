@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sagaing Fault Seismicity Dashboard | 2025 Myanmar Earthquake Analysis</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading">
+        <div class="loader"></div>
+        <p>Loading Earthquake Data...</p>
+    </div>
+
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-left">
+            <h1>🌍 Sagaing Fault Seismicity Dashboard</h1>
+            <p class="subtitle">2025 Myanmar Earthquake Sequence Analysis</p>
+        </div>
+        <div class="header-right">
+            <div class="date-badge">
+                <span class="pulse"></span>
+                <span>Mar 28 - Dec 10, 2025</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <main class="dashboard-container">
+        <!-- Top Stats Row -->
+        <section class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <span class="stat-value" id="total-events">--</span>
+                    <span class="stat-label">Total Events</span>
+                </div>
+            </div>
+            <div class="stat-card highlight">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-content">
+                    <span class="stat-value" id="max-magnitude">--</span>
+                    <span class="stat-label">Max Magnitude</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔴</div>
+                <div class="stat-content">
+                    <span class="stat-value" id="strong-events">--</span>
+                    <span class="stat-label">M ≥ 5.0 Events</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📍</div>
+                <div class="stat-content">
+                    <span class="stat-value" id="avg-depth">--</span>
+                    <span class="stat-label">Avg Depth (km)</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-content">
+                    <span class="stat-value" id="daily-avg">--</span>
+                    <span class="stat-label">Events/Day (Avg)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="main-grid">
+            <!-- Left Column: Map -->
+            <section class="map-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>🗺️ Earthquake Map</h2>
+                        <div class="map-controls">
+                            <label><input type="checkbox" id="toggle-earthquakes" checked> Earthquakes</label>
+                            <label><input type="checkbox" id="toggle-faults" checked> Fault Lines</label>
+                        </div>
+                    </div>
+                    <div id="map"></div>
+                    <div class="map-legend">
+                        <div class="legend-title">Magnitude Scale</div>
+                        <div class="legend-items">
+                            <span><i style="background:#8B0000"></i> M ≥ 7.0</span>
+                            <span><i style="background:#DC143C"></i> M 6.0-6.9</span>
+                            <span><i style="background:#FF4500"></i> M 5.0-5.9</span>
+                            <span><i style="background:#FF6347"></i> M 4.0-4.9</span>
+                            <span><i style="background:#FFA07A"></i> M < 4.0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Charts -->
+            <section class="charts-section">
+                <!-- Timeline Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>📅 Earthquake Timeline</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Magnitude Distribution -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>📊 Magnitude Distribution</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="magnitudeChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Second Row -->
+        <div class="secondary-grid">
+            <!-- Depth Analysis -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📍 Depth Analysis</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="depthChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Cumulative Events -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📈 Cumulative Events</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="cumulativeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Major Events Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>⚡ Major Events (M ≥ 5.0)</h2>
+                </div>
+                <div class="events-table-container">
+                    <table class="events-table" id="major-events-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Magnitude</th>
+                                <th>Depth</th>
+                                <th>Location</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Third Row: Additional Analysis -->
+        <div class="tertiary-grid">
+            <!-- Monthly Distribution -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📆 Monthly Distribution</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Magnitude vs Depth Scatter -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔬 Magnitude vs Depth</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="scatterChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <section class="info-section">
+            <div class="card info-card">
+                <h2>ℹ️ About This Dashboard</h2>
+                <p>This dashboard visualizes the earthquake sequence following the devastating <strong>M 7.7 Mandalay earthquake</strong> on March 28, 2025. The data covers the Sagaing Fault region in Myanmar.</p>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <h4>Data Source</h4>
+                        <p><a href="https://earthquake.usgs.gov/" target="_blank">USGS Earthquake Hazards Program</a></p>
+                    </div>
+                    <div class="info-item">
+                        <h4>Fault System</h4>
+                        <p>Sagaing Fault (1,200-1,500 km, right-lateral strike-slip)</p>
+                    </div>
+                    <div class="info-item">
+                        <h4>Tectonic Data</h4>
+                        <p>Myanmar Tectonic Map 2011</p>
+                    </div>
+                    <div class="info-item">
+                        <h4>Created By</h4>
+                        <p><a href="https://github.com/drtinkooo" target="_blank">Tin Ko Oo</a> - Mahidol University</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+        <p>🌏 Created for seismic hazard awareness and public education | Data: <a href="https://earthquake.usgs.gov/" target="_blank">USGS</a></p>
+        <p>© 2025 Sagaing Fault Seismicity Project | <a href="https://github.com/drtinkooo/sagaing-fault-seismicity-buildings" target="_blank">GitHub Repository</a></p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
